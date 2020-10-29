@@ -53,7 +53,7 @@ func getMode() (int, int) {
 		utils.ClearPreviousLine()
 		fmt.Print("Specify a direction to flip (\033[4ml\033[24meft/\033[4mr\033[24might/\033[4md\033[24mown/\033[4ms\033[24mcroll): ")
 		scanner.Scan()
-		scanned := scanner.Text()
+		scanned := strings.ToLower(scanner.Text())
 		if regexp.MustCompile(`^(?:left|right|down|scroll|l|r|d|s)$`).MatchString(scanned) {
 			switch scanned {
 			case `l`, `left`:
@@ -89,10 +89,10 @@ func getRetry() uint {
 		utils.GoToPreviousLine(3)
 		fmt.Print(`Do you want to retry? (S/d/q)? `)
 		scanner.Scan()
-		scanned := scanner.Text()
+		scanned := strings.ToLower(scanner.Text())
 		if regexp.MustCompile(`^(?:S|d|q)?$`).MatchString(scanned) {
 			switch scanned {
-			case ``, `s`, `S`:
+			case ``, `s`:
 				retry = RETRY_WITH_SAME_CONFIG
 			case `d`:
 				retry = RETRY_WITH_DIFFERENT_CONFIG

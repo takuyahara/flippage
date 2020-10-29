@@ -14,11 +14,14 @@ import (
 )
 
 const APP_NAME = `Flippage`
+const (
+	RETRY_WITH_SAME_CONFIG = iota
+	RETRY_WITH_DIFFERENT_CONFIG
+	NO_RETRY
+)
 
-func main() {
+func getInterval() int {
 	var interval int
-	var vk int
-	utils.Clear()
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print(`Type interval in second which is positive non-zero int: `)
@@ -34,6 +37,12 @@ func main() {
 		}
 		utils.ClearPreviousLine()
 	}
+	return interval
+}
+
+func getVk() int {
+	var vk int
+	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		utils.ClearPreviousLine()
 		fmt.Print(`Specify a direction to flip (left, right, up, down): `)
@@ -54,6 +63,41 @@ func main() {
 		}
 		utils.ClearLine()
 	}
+	return vk
+}
+
+func getRetry() uint {
+	var retry uint
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print(`Do you want to retry? (S/d/n)? 
+ [S] Retry with same config
+ [d] Retry with different config
+ [n] Don't retry and close app`)
+		utils.GoToPreviousLine(3)
+		fmt.Print(`Do you want to retry? (S/d/n)? `)
+		scanner.Scan()
+		scanned := scanner.Text()
+		if regexp.MustCompile(`^(?:S|d|n)?$`).MatchString(scanned) {
+			switch scanned {
+			case ``:
+			case `S`:
+				retry = RETRY_WITH_SAME_CONFIG
+			case `d`:
+				retry = RETRY_WITH_DIFFERENT_CONFIG
+			case `n`:
+				retry = NO_RETRY
+			}
+			break
+		}
+		utils.GoToNextLine(3)
+		utils.ClearPreviousLine(4)
+	}
+	utils.GoToNextLine(3)
+	return retry
+}
+
+func run(interval int, vk int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	go keyboard.ListenEvents()
 	// Wait until foreground app changes
@@ -69,5 +113,22 @@ func main() {
 	<-chAppInfoForeground
 	// Close app
 	utils.ClearLine()
+	keyboard.Stop()
 	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
+	return getRetry()
+}
+
+func main() {
+	utils.Clear()
+	interval := getInterval()
+	vk := getVk()
+	retry := run(interval, vk)
+	for retry != NO_RETRY {
+		utils.Clear()
+		if retry == RETRY_WITH_DIFFERENT_CONFIG {
+			interval = getInterval()
+			vk = getVk()
+		}
+		retry = run(interval, vk)
+	}
 }

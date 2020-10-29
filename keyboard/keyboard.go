@@ -10,6 +10,12 @@ import (
 )
 
 var cnt int
+var isRunning bool
+
+func Stop() {
+	isRunning = false
+	hook.End()
+}
 
 func ListenEvents() {
 	hook.Register(hook.KeyDown, []string{`left`}, func(e hook.Event) {
@@ -30,13 +36,14 @@ func ListenEvents() {
 }
 
 func Send(interval int, vk int) {
+	isRunning = true
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		panic(err)
 	}
 	kb.SetKeys(vk)
 	cnt = 0
-	for {
+	for isRunning {
 		if cnt >= interval {
 			if err := kb.Launching(); err != nil {
 				panic(err)

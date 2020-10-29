@@ -50,17 +50,13 @@ func getVk() int {
 		scanned := scanner.Text()
 		if regexp.MustCompile(`^(?:left|right|up|down|l|r|u|d)$`).MatchString(scanned) {
 			switch scanned {
-			case `l`:
-			case `left`:
+			case `l`, `left`:
 				vk = keybd_event.VK_LEFT
-			case `r`:
-			case `right`:
+			case `r`, `right`:
 				vk = keybd_event.VK_RIGHT
-			case `u`:
-			case `up`:
+			case `u`, `up`:
 				vk = keybd_event.VK_UP
-			case `d`:
-			case `down`:
+			case `d`, `down`:
 				vk = keybd_event.VK_DOWN
 			}
 			break

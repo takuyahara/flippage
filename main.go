@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"flippage/appinfo"
-	"flippage/keyboard"
+	"flippage/listener"
 	"flippage/utils"
 	"fmt"
 	"os"
@@ -20,15 +20,15 @@ const (
 	NO_RETRY
 )
 
-func getInterval() int {
-	var interval int
+func getInterval() float64 {
+	var interval float64
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(`Type interval in second which is positive non-zero int: `)
+		fmt.Print(`Type interval in second which is positive float (%.1f): `)
 		scanner.Scan()
 		scanned := scanner.Text()
-		if regexp.MustCompile(`^[1-9][0-9]*$`).MatchString(scanned) {
-			i, err := strconv.Atoi(scanned)
+		if regexp.MustCompile(`^(?:0\.[1-9]|[1-9][0-9]*(?:\.[0-9])?)$`).MatchString(scanned) {
+			i, err := strconv.ParseFloat(scanned, 64)
 			if err != nil {
 				panic(err)
 			}
@@ -70,22 +70,22 @@ func getRetry() uint {
 	var retry uint
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(`Do you want to retry? (S/d/n)? 
+		fmt.Print(`Do you want to retry? (S/d/q)? 
  [S] Retry with same config
  [d] Retry with different config
- [n] Don't retry and close app`)
+ [q] Don't retry and quit app`)
 		utils.GoToPreviousLine(3)
-		fmt.Print(`Do you want to retry? (S/d/n)? `)
+		fmt.Print(`Do you want to retry? (S/d/q)? `)
 		scanner.Scan()
 		scanned := scanner.Text()
-		if regexp.MustCompile(`^(?:S|d|n)?$`).MatchString(scanned) {
+		if regexp.MustCompile(`^(?:S|d|q)?$`).MatchString(scanned) {
 			switch scanned {
 			case ``:
 			case `S`:
 				retry = RETRY_WITH_SAME_CONFIG
 			case `d`:
 				retry = RETRY_WITH_DIFFERENT_CONFIG
-			case `n`:
+			case `q`:
 				retry = NO_RETRY
 			}
 			break
@@ -97,9 +97,9 @@ func getRetry() uint {
 	return retry
 }
 
-func run(interval int, vk int) uint {
+func run(interval float64, vk int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
-	go keyboard.ListenEvents()
+	go listener.ListenEvents()
 	// Wait until foreground app changes
 	utils.ClearPreviousLine()
 	fmt.Print(`Waiting to foreground app changes...`)
@@ -108,12 +108,12 @@ func run(interval int, vk int) uint {
 	// Flip page automatically
 	utils.ClearLine()
 	fmt.Printf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
-	go keyboard.Send(interval, vk)
+	go listener.Flip(interval, vk)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
 	utils.ClearLine()
-	keyboard.Stop()
+	listener.Stop()
 	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
 	return getRetry()
 }

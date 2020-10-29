@@ -1,4 +1,4 @@
-package keyboard
+package listener
 
 import (
 	hook "flippage/gohook"
@@ -9,7 +9,9 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
-var cnt int
+const tick = 0.01
+
+var cnt float64
 var isRunning bool
 
 func Stop() {
@@ -19,45 +21,45 @@ func Stop() {
 
 func ListenEvents() {
 	hook.Register(hook.KeyDown, []string{`left`}, func(e hook.Event) {
-		cnt = 0
+		cnt = 0.0
 	})
 	hook.Register(hook.KeyDown, []string{`right`}, func(e hook.Event) {
-		cnt = 0
+		cnt = 0.0
 	})
 	hook.Register(hook.KeyDown, []string{`up`}, func(e hook.Event) {
-		cnt = 0
+		cnt = 0.0
 	})
 	// Workaround: Oddly, key down event for `down` will never be invoked
 	hook.Register(hook.KeyHold, []string{`down`}, func(e hook.Event) {
-		cnt = 0
+		cnt = 0.0
+	})
+	hook.Register(hook.MouseWheel, []string{}, func(e hook.Event) {
+		cnt = 0.0
 	})
 	s := hook.Start()
 	<-hook.Process(s)
 }
 
-func Send(interval int, vk int) {
+func Flip(interval float64, vk int) {
 	isRunning = true
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		panic(err)
 	}
 	kb.SetKeys(vk)
-	cnt = 0
+	cnt = 0.0
 	for isRunning {
-		if cnt >= interval {
+		remaining := interval - cnt
+		if remaining < 0.0 {
 			if err := kb.Launching(); err != nil {
 				panic(err)
 			}
-			cnt = 0
+			remaining = interval
+			cnt = 0.0
 		}
 		utils.ClearLine()
-		remaining := interval - cnt
-		if remaining > 1 {
-			fmt.Printf("Will flip page in %d seconds...", remaining)
-		} else {
-			fmt.Print(`Will flip page in 1 second...`)
-		}
-		cnt++
-		time.Sleep(time.Second)
+		fmt.Printf("Will flip page in %.1f second(s)...", remaining)
+		cnt += tick
+		time.Sleep(time.Millisecond * (1000 * tick))
 	}
 }

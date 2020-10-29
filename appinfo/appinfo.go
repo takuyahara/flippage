@@ -1,36 +1,24 @@
 package appinfo
 
 import (
-	"os/exec"
-	"regexp"
+	"github.com/go-vgo/robotgo"
+	"github.com/mitchellh/go-ps"
 )
 
 type AppInfo struct {
-	Info string
+	Pid  int32
 	Name string
 }
 
-func getForegroundInfo() string {
-	infoForeground, err := exec.Command(`lsappinfo`, `front`).Output()
-	if err != nil {
-		panic(err)
-	}
-	return string(infoForeground)
-}
-
-func getForegroundName() string {
-	infoForeground, err := exec.Command(`lsappinfo`, `info`, `-only`, `name`, getForegroundInfo()).Output()
-	if err != nil {
-		panic(err)
-	}
-	nameForeground := regexp.MustCompile(`"LSDisplayName"="(.*?)"`).FindSubmatch(infoForeground)[1]
-	return string(nameForeground)
-}
-
 func getForeground() AppInfo {
+	pid := robotgo.GetPID()
+	pidInfo, err := ps.FindProcess(int(pid))
+	if err != nil {
+		panic(err)
+	}
 	return AppInfo{
-		Info: getForegroundInfo(),
-		Name: getForegroundName(),
+		Pid:  pid,
+		Name: pidInfo.Executable(),
 	}
 }
 
@@ -38,7 +26,7 @@ func GetChangedForegroundInfo(ch chan AppInfo) {
 	appInfoDefault := getForeground()
 	for {
 		appInfoForeground := getForeground()
-		if appInfoDefault.Info != appInfoForeground.Info {
+		if appInfoDefault.Pid != appInfoForeground.Pid {
 			ch <- appInfoForeground
 			break
 		}

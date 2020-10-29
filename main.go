@@ -45,17 +45,21 @@ func getVk() int {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		utils.ClearPreviousLine()
-		fmt.Print(`Specify a direction to flip (left, right, up, down): `)
+		fmt.Print("Specify a direction to flip (\033[4ml\033[24meft/\033[4mr\033[24might/\033[4mu\033[24mp/\033[4md\033[24mown): ")
 		scanner.Scan()
 		scanned := scanner.Text()
-		if regexp.MustCompile(`^(?:left|right|up|down)$`).MatchString(scanned) {
+		if regexp.MustCompile(`^(?:left|right|up|down|l|r|u|d)$`).MatchString(scanned) {
 			switch scanned {
+			case `l`:
 			case `left`:
 				vk = keybd_event.VK_LEFT
+			case `r`:
 			case `right`:
 				vk = keybd_event.VK_RIGHT
+			case `u`:
 			case `up`:
 				vk = keybd_event.VK_UP
+			case `d`:
 			case `down`:
 				vk = keybd_event.VK_DOWN
 			}

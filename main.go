@@ -25,15 +25,15 @@ const (
 	MODE_SCROLL
 )
 
-func getInterval() float64 {
-	var interval float64
+func getInterval() int {
+	var interval int
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(`Type interval in second which is positive float (%.1f): `)
+		fmt.Print(`Type interval in second which is non-zero uint: `)
 		scanner.Scan()
 		scanned := scanner.Text()
-		if regexp.MustCompile(`^(?:0\.[1-9]|[1-9][0-9]*(?:\.[0-9])?)$`).MatchString(scanned) {
-			i, err := strconv.ParseFloat(scanned, 64)
+		if regexp.MustCompile(`^[1-9][0-9]*$`).MatchString(scanned) {
+			i, err := strconv.Atoi(scanned)
 			if err != nil {
 				panic(err)
 			}
@@ -108,7 +108,7 @@ func getRetry() uint {
 	return retry
 }
 
-func runFlip(interval float64, vk int) uint {
+func runFlip(interval int, vk int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	go listener.ListenEvents()
 	// Wait until foreground app changes
@@ -129,7 +129,7 @@ func runFlip(interval float64, vk int) uint {
 	return getRetry()
 }
 
-func runScroll(interval float64) uint {
+func runScroll(interval int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	go listener.ListenEvents()
 	// Wait until foreground app changes

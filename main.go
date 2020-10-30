@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flippage/appinfo"
+	"flippage/config"
 	"flippage/listener"
 	"flippage/utils"
 	"fmt"
@@ -15,15 +16,6 @@ import (
 )
 
 const APP_NAME = `Flippage`
-const (
-	RETRY_WITH_SAME_CONFIG = iota
-	RETRY_WITH_DIFFERENT_CONFIG
-	NO_RETRY
-)
-const (
-	MODE_FLIP = iota
-	MODE_SCROLL
-)
 
 func getInterval() int {
 	var interval int
@@ -45,7 +37,8 @@ func getInterval() int {
 	return interval
 }
 
-func getMode() (int, int) {
+func getConfig() (int, int, int) {
+	var direction int
 	var mode int
 	var vk int
 	scanner := bufio.NewScanner(os.Stdin)
@@ -57,23 +50,27 @@ func getMode() (int, int) {
 		if regexp.MustCompile(`^(?:left|right|down|scroll|l|r|d|s)$`).MatchString(scanned) {
 			switch scanned {
 			case `l`, `left`:
-				mode = MODE_FLIP
+				direction = config.DIRECTION_LEFT
+				mode = config.MODE_FLIP
 				vk = keybd_event.VK_LEFT
 			case `r`, `right`:
-				mode = MODE_FLIP
+				direction = config.DIRECTION_RIGHT
+				mode = config.MODE_FLIP
 				vk = keybd_event.VK_RIGHT
 			case `d`, `down`:
-				mode = MODE_FLIP
+				direction = config.DIRECTION_DOWN
+				mode = config.MODE_FLIP
 				vk = keybd_event.VK_DOWN
 			case `s`, `scroll`:
-				mode = MODE_SCROLL
+				direction = config.DIRECTION_DOWN
+				mode = config.MODE_SCROLL
 				vk = keybd_event.VK_UP
 			}
 			break
 		}
 		utils.ClearLine()
 	}
-	return mode, vk
+	return direction, mode, vk
 }
 
 func getRetry() uint {
@@ -93,11 +90,11 @@ func getRetry() uint {
 		if regexp.MustCompile(`^(?:S|d|q)?$`).MatchString(scanned) {
 			switch scanned {
 			case ``, `s`:
-				retry = RETRY_WITH_SAME_CONFIG
+				retry = config.RETRY_WITH_SAME_CONFIG
 			case `d`:
-				retry = RETRY_WITH_DIFFERENT_CONFIG
+				retry = config.RETRY_WITH_DIFFERENT_CONFIG
 			case `q`:
-				retry = NO_RETRY
+				retry = config.NO_RETRY
 			}
 			break
 		}
@@ -108,7 +105,7 @@ func getRetry() uint {
 	return retry
 }
 
-func runFlip(interval int, vk int) uint {
+func runFlip(direction, interval, vk int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	go listener.ListenEvents()
 	// Wait until foreground app changes
@@ -118,13 +115,14 @@ func runFlip(interval int, vk int) uint {
 	appInfoTarget := <-chAppInfoForeground
 	// Flip page automatically
 	utils.ClearLine()
-	fmt.Printf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
-	go listener.Flip(interval, vk)
+	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
+	go listener.Flip(message, direction, interval, vk)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
-	utils.ClearLine()
 	listener.Stop()
+	utils.Clear()
+	fmt.Print(message)
 	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
 	return getRetry()
 }
@@ -139,13 +137,14 @@ func runScroll(interval int) uint {
 	appInfoTarget := <-chAppInfoForeground
 	// Flip page automatically
 	utils.ClearLine()
-	fmt.Printf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
-	go listener.Scroll(interval)
+	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
+	go listener.Scroll(message, interval)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
-	utils.ClearLine()
 	listener.Stop()
+	utils.Clear()
+	fmt.Print(message)
 	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
 	return getRetry()
 }
@@ -153,21 +152,21 @@ func runScroll(interval int) uint {
 func main() {
 	utils.Clear()
 	interval := getInterval()
-	mode, vk := getMode()
+	direction, mode, vk := getConfig()
 	var retry uint
-	if mode == MODE_FLIP {
-		retry = runFlip(interval, vk)
+	if mode == config.MODE_FLIP {
+		retry = runFlip(direction, interval, vk)
 	} else {
 		retry = runScroll(interval)
 	}
-	for retry != NO_RETRY {
+	for retry != config.NO_RETRY {
 		utils.Clear()
-		if retry == RETRY_WITH_DIFFERENT_CONFIG {
+		if retry == config.RETRY_WITH_DIFFERENT_CONFIG {
 			interval = getInterval()
-			mode, vk = getMode()
+			direction, mode, vk = getConfig()
 		}
-		if mode == MODE_FLIP {
-			retry = runFlip(interval, vk)
+		if mode == config.MODE_FLIP {
+			retry = runFlip(direction, interval, vk)
 		} else {
 			retry = runScroll(interval)
 		}

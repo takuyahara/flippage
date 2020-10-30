@@ -94,11 +94,11 @@ func ShowProgressBarLeft(progress float64, msg ...string) {
 	repeatBar := int(math.Round(float64(width) * progress))
 	if messageExists {
 		GoToNextLine(2)
-		fmt.Print(strings.Repeat(` `, repeatSpace) + "\033[44m" + strings.Repeat(` `, repeatBar) + "\033[0m")
+		fmt.Print(strings.Repeat(` `, repeatSpace) + "\033[46;1m" + strings.Repeat(` `, repeatBar) + "\033[0m")
 		GoToPreviousLine(2)
 		fmt.Print(message)
 	} else {
-		fmt.Print(strings.Repeat(` `, repeatSpace) + "\033[44m" + strings.Repeat(` `, repeatBar) + "\033[0m")
+		fmt.Print(strings.Repeat(` `, repeatSpace) + "\033[46;1m" + strings.Repeat(` `, repeatBar) + "\033[0m")
 	}
 }
 
@@ -117,11 +117,11 @@ func ShowProgressBarRight(progress float64, msg ...string) {
 	repeatBar := int(math.Round(float64(width) * progress))
 	if messageExists {
 		GoToNextLine(2)
-		fmt.Print("\033[44m" + strings.Repeat(` `, repeatBar) + "\033[0m")
+		fmt.Print("\033[46;1m" + strings.Repeat(` `, repeatBar) + "\033[0m")
 		GoToPreviousLine(2)
 		fmt.Print(message)
 	} else {
-		fmt.Print("\033[44m" + strings.Repeat(` `, repeatBar) + "\033[0m")
+		fmt.Print("\033[46;1m" + strings.Repeat(` `, repeatBar) + "\033[0m")
 	}
 }
 
@@ -144,21 +144,21 @@ func ShowProgressBarDown(progress float64, msg ...string) {
 		firstChar := ``
 		msgMargin := config.MARGIN_VERTICAL_PROGRESS_BAR
 		if i < repeatBar {
-			firstChar = "\033[44m \033[0m"
+			firstChar = "\033[46;1m \033[0m"
 			msgMargin--
 		}
 		fmt.Printf("%s%s%s\n", firstChar, strings.Repeat(` `, msgMargin), line)
 	}
 	repeatBarRemaining := repeatBar - len(messages)
 	if repeatBarRemaining > 0 {
-		fmt.Print(strings.Repeat("\033[44m \033[0m\n", repeatBarRemaining-1) + "\033[44m \033[0m")
+		fmt.Print(strings.Repeat("\033[46;1m \033[0m\n", repeatBarRemaining-1) + "\033[46;1m \033[0m")
 	}
 	if repeatBar > 0 {
 		GoToPreviousLine(repeatBar - len(messages))
 		firstChar := ``
 		msgMargin := config.MARGIN_VERTICAL_PROGRESS_BAR
 		if len(messages)-1 < repeatBar {
-			firstChar = "\033[44m \033[0m"
+			firstChar = "\033[46;1m \033[0m"
 			msgMargin--
 		}
 		fmt.Printf("%s%s%s", firstChar, strings.Repeat(` `, msgMargin), messages[len(messages)-1])

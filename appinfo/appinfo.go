@@ -10,22 +10,30 @@ type AppInfo struct {
 	Name string
 }
 
-func getForeground() AppInfo {
+func getForeground() (AppInfo, bool) {
 	pid := robotgo.GetPID()
-	pidInfo, err := ps.FindProcess(int(pid))
+	process, err := ps.FindProcess(int(pid))
 	if err != nil {
 		panic(err)
 	}
-	return AppInfo{
-		Pid:  pid,
-		Name: pidInfo.Executable(),
+	appInfo := AppInfo{}
+	isProcessNonNil := process != nil
+	if isProcessNonNil {
+		appInfo = AppInfo{
+			Pid:  pid,
+			Name: process.Executable(),
+		}
 	}
+	return appInfo, isProcessNonNil
 }
 
 func GetChangedForegroundInfo(ch chan AppInfo) {
-	appInfoDefault := getForeground()
+	appInfoDefault, _ := getForeground()
 	for {
-		appInfoForeground := getForeground()
+		appInfoForeground, ok := getForeground()
+		if !ok {
+			continue
+		}
 		if appInfoDefault.Pid != appInfoForeground.Pid {
 			ch <- appInfoForeground
 			break

@@ -1,8 +1,8 @@
 <h1 align="center">
-    Flippage v1.3.1
+    Flippage v1.3.2
 </h1>
 
-![version](https://img.shields.io/badge/version-v1.3.1-brightgreen) ![README](https://img.shields.io/badge/README-available-brightgreen) ![platform](https://img.shields.io/badge/platform-mac-blue) ![maintainer](https://img.shields.io/badge/maintainer-Takuya%20HARA-brightgreen) 
+![version](https://img.shields.io/badge/version-v1.3.2-brightgreen) ![README](https://img.shields.io/badge/README-available-brightgreen) ![platform](https://img.shields.io/badge/platform-mac-blue) ![maintainer](https://img.shields.io/badge/maintainer-Takuya%20HARA-brightgreen) 
 
 A tiny app to flip book automatically. Just launch app, specify an interval to flip page in second and direction to flip. Then activate a book reader app and keep reading.
 

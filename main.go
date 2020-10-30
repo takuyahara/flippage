@@ -77,17 +77,18 @@ func getRetry() uint {
 	var retry uint
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(strings.Join([]string{
+		msgPrompt := []string{
 			"Do you want to retry? (S/d/q)? ",
 			" [S] Retry with \033[4ms\033[24mame config",
 			" [d] Retry with \033[4md\033[24mifferent config",
 			" [q] Don't retry and \033[4mq\033[24muit app",
-		}, "\n"))
+		}
+		fmt.Print(strings.Join(msgPrompt, "\n"))
 		utils.GoToPreviousLine(3)
-		fmt.Print(`Do you want to retry? (S/d/q)? `)
+		fmt.Print(msgPrompt[0])
 		scanner.Scan()
 		scanned := strings.ToLower(scanner.Text())
-		if regexp.MustCompile(`^(?:S|d|q)?$`).MatchString(scanned) {
+		if regexp.MustCompile(`^(?:s|d|q)?$`).MatchString(scanned) {
 			switch scanned {
 			case ``, `s`:
 				retry = config.RETRY_WITH_SAME_CONFIG

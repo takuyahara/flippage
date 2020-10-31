@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var messageExists bool
-
 func Clear() {
 	fmt.Print("\033[H\033[2J")
 }
@@ -23,8 +21,8 @@ func ClearLine() {
 func ClearPreviousLine(rep ...int) {
 	repeat := 1
 	if len(rep) == 1 {
-		if rep[0] <= 0 {
-			panic(`rep must be greater than 0.`)
+		if rep[0] < 0 {
+			panic(`rep must be greater equal than 0.`)
 		}
 		repeat = rep[0]
 	} else if len(rep) > 1 {
@@ -36,8 +34,8 @@ func ClearPreviousLine(rep ...int) {
 func GoToPreviousLine(rep ...int) {
 	repeat := 1
 	if len(rep) == 1 {
-		if rep[0] <= 0 {
-			panic(`rep must be greater than 0.`)
+		if rep[0] < 0 {
+			panic(`rep must be greater equal than 0.`)
 		}
 		repeat = rep[0]
 	} else if len(rep) > 1 {
@@ -49,8 +47,8 @@ func GoToPreviousLine(rep ...int) {
 func GoToNextLine(rep ...int) {
 	repeat := 1
 	if len(rep) == 1 {
-		if rep[0] <= 0 {
-			panic(`rep must be greater than 0.`)
+		if rep[0] < 0 {
+			panic(`rep must be greater equal than 0.`)
 		}
 		repeat = rep[0]
 	} else if len(rep) > 1 {
@@ -79,15 +77,14 @@ func getSize() (int, int) {
 }
 
 func ShowProgressBarLeft(progress float64, msg ...string) {
-	var message string
-	messageExists = false
+	message := ``
+	messageExists := false
 	if len(msg) == 1 {
 		message = msg[0]
 		messageExists = true
 	} else if len(msg) > 1 {
 		panic(`Cannot passed more than 2 arguments.`)
 	}
-	// ClearHorizontalProgressBar()
 	Clear()
 	_, width := getSize()
 	repeatSpace := int(math.Round(float64(width) * (1.0 - progress)))
@@ -103,15 +100,14 @@ func ShowProgressBarLeft(progress float64, msg ...string) {
 }
 
 func ShowProgressBarRight(progress float64, msg ...string) {
-	var message string
-	messageExists = false
+	message := ``
+	messageExists := false
 	if len(msg) == 1 {
 		message = msg[0]
 		messageExists = true
 	} else if len(msg) > 1 {
 		panic(`Cannot passed more than 2 arguments.`)
 	}
-	// ClearHorizontalProgressBar()
 	Clear()
 	_, width := getSize()
 	repeatBar := int(math.Round(float64(width) * progress))
@@ -126,16 +122,12 @@ func ShowProgressBarRight(progress float64, msg ...string) {
 }
 
 func ShowProgressBarDown(progress float64, msg ...string) {
-	var message string
-	messageExists = false
+	message := ``
 	if len(msg) == 1 {
 		message = msg[0]
-		messageExists = true
-		// GoToNextLine()
 	} else if len(msg) > 1 {
 		panic(`Cannot passed more than 2 arguments.`)
 	}
-	// ClearVerticalProgressBar()
 	Clear()
 	messages := strings.Split(message, "\n")
 	height, _ := getSize()
@@ -153,8 +145,14 @@ func ShowProgressBarDown(progress float64, msg ...string) {
 	if repeatBarRemaining > 0 {
 		fmt.Print(strings.Repeat("\033[46;1m \033[0m\n", repeatBarRemaining-1) + "\033[46;1m \033[0m")
 	}
-	if repeatBar > 0 {
-		GoToPreviousLine(repeatBar - len(messages))
+	// Move cursor back to top
+	if repeatBarRemaining > 0 {
+		GoToPreviousLine(repeatBarRemaining - 1)
+	}
+	GoToPreviousLine(len(messages))
+	// Move cursor to message's last line
+	if len(messages) > 0 {
+		GoToNextLine(len(messages) - 1)
 		firstChar := ``
 		msgMargin := config.MARGIN_VERTICAL_PROGRESS_BAR
 		if len(messages)-1 < repeatBar {
@@ -168,20 +166,3 @@ func ShowProgressBarDown(progress float64, msg ...string) {
 func ShowProgressBarScroll(progress float64, msg ...string) {
 	ShowProgressBarDown(progress, msg...)
 }
-
-// func ClearHorizontalProgressBar() {
-// 	if messageExists {
-// 		GoToNextLine()
-// 		ClearLine()
-// 		ClearPreviousLine()
-// 		GoToPreviousLine()
-// 	} else {
-// 		ClearLine()
-// 	}
-// }
-
-// func ClearVerticalProgressBar() {
-// 	height, _ := getSize()
-// 	fmt.Print("\033[0m" + strings.Repeat(" \n", height-1) + " ")
-// 	GoToPreviousLine(height)
-// }

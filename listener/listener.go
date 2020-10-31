@@ -13,63 +13,46 @@ import (
 )
 
 var cnt int
-var isRunning bool
-var direction int
-var mode int
+var chStop chan bool
+var skipEvent bool
 
 func Stop() {
-	isRunning = false
+	chStop <- false
 	robotgo.EventEnd()
-	// if mode == config.MODE_SCROLL || direction == config.DIRECTION_DOWN {
-	// 	utils.ClearVerticalProgressBar()
-	// } else {
-	// 	utils.ClearHorizontalProgressBar()
-	// }
 }
 
 func ListenEvents() {
-	robotgo.EventHook(hook.KeyDown, []string{`left`}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.KeyDown, []string{`right`}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.KeyDown, []string{`up`}, func(e hook.Event) {
-		cnt = 0
-	})
-	// Workaround: Oddly, key down event for `down` will never be invoked
-	robotgo.EventHook(hook.KeyHold, []string{`down`}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.MouseWheel, []string{}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.MouseDown, []string{}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.MouseUp, []string{}, func(e hook.Event) {
-		cnt = 0
-	})
-	robotgo.EventHook(hook.MouseDrag, []string{}, func(e hook.Event) {
-		cnt = 0
-	})
+	skipEvent = false
+	resetCounter := func(e hook.Event) {
+		if !skipEvent {
+			cnt = 0
+		}
+		skipEvent = false
+	}
+	robotgo.EventHook(hook.KeyDown, []string{`left`}, resetCounter)
+	robotgo.EventHook(hook.KeyDown, []string{`right`}, resetCounter)
+	robotgo.EventHook(hook.KeyDown, []string{`up`}, resetCounter)
+	robotgo.EventHook(hook.KeyHold, []string{`down`}, resetCounter) // Workaround: Oddly, key down event for `down` will never be invoked
+	robotgo.EventHook(hook.MouseWheel, []string{}, resetCounter)
+	robotgo.EventHook(hook.MouseDown, []string{}, resetCounter)
+	robotgo.EventHook(hook.MouseUp, []string{}, resetCounter)
+	robotgo.EventHook(hook.MouseDrag, []string{}, resetCounter)
 	s := robotgo.EventStart()
 	<-robotgo.EventProcess(s)
 }
 
-func Flip(msg1 string, d, interval, vk int) {
-	mode = config.MODE_FLIP
-	direction = d
-	isRunning = true
+func Flip(msg1 string, direction, interval, vk int) {
+	cnt = 0
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		panic(err)
 	}
 	kb.SetKeys(vk)
-	cnt = 0
-	for isRunning {
+	// Main func
+	mainFunc := func() {
 		remaining := interval - cnt
 		if remaining <= 0 {
+			skipEvent = true
 			if err := kb.Launching(); err != nil {
 				panic(err)
 			}
@@ -94,17 +77,29 @@ func Flip(msg1 string, d, interval, vk int) {
 			}
 		}
 		cnt++
-		time.Sleep(time.Second)
+	}
+	mainFunc() // Run once immediately
+	// Run ticker
+	chStop = make(chan bool)
+	ticker := time.NewTicker(time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			mainFunc()
+		case <-chStop:
+			ticker.Stop()
+			break
+		}
 	}
 }
 
 func Scroll(msg1 string, interval int) {
-	mode = config.MODE_SCROLL
-	isRunning = true
 	cnt = 0
-	for isRunning {
+	// Main func
+	mainFunc := func() {
 		remaining := interval - cnt
 		if remaining <= 0 {
+			skipEvent = true
 			robotgo.ScrollMouse(1, `down`)
 			remaining = interval
 			cnt = 0
@@ -119,6 +114,18 @@ func Scroll(msg1 string, interval int) {
 		message := msg1 + msg2
 		utils.ShowProgressBarScroll(progress, message)
 		cnt++
-		time.Sleep(time.Second)
+	}
+	mainFunc() // Run once immediately
+	// Run ticker
+	chStop = make(chan bool)
+	ticker := time.NewTicker(time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			mainFunc()
+		case <-chStop:
+			ticker.Stop()
+			break
+		}
 	}
 }

@@ -108,7 +108,6 @@ func getRetry() uint {
 
 func runFlip(direction, interval, vk int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
-	go listener.ListenEvents()
 	// Wait until foreground app changes
 	utils.ClearPreviousLine()
 	fmt.Print(`Waiting to foreground app changes...`)
@@ -117,6 +116,7 @@ func runFlip(direction, interval, vk int) uint {
 	// Flip page automatically
 	utils.ClearLine()
 	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
+	go listener.ListenEvents()
 	go listener.Flip(message, direction, interval, vk)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
@@ -130,7 +130,6 @@ func runFlip(direction, interval, vk int) uint {
 
 func runScroll(interval int) uint {
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
-	go listener.ListenEvents()
 	// Wait until foreground app changes
 	utils.ClearPreviousLine()
 	fmt.Print(`Waiting to foreground app changes...`)
@@ -139,6 +138,7 @@ func runScroll(interval int) uint {
 	// Flip page automatically
 	utils.ClearLine()
 	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
+	go listener.ListenEvents()
 	go listener.Scroll(message, interval)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground

@@ -12,8 +12,8 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
-var cnt int
 var chStop chan bool
+var chReset chan bool
 var skipEvent bool
 
 func Stop() {
@@ -25,7 +25,7 @@ func ListenEvents() {
 	skipEvent = false
 	resetCounter := func(e hook.Event) {
 		if !skipEvent {
-			cnt = 0
+			chReset <- true
 		}
 		skipEvent = false
 	}
@@ -34,7 +34,7 @@ func ListenEvents() {
 	robotgo.EventHook(hook.KeyDown, []string{`up`}, resetCounter)
 	robotgo.EventHook(hook.KeyHold, []string{`down`}, resetCounter) // Workaround: Oddly, key down event for `down` will never be invoked
 	robotgo.EventHook(hook.MouseWheel, []string{}, resetCounter)
-	robotgo.EventHook(hook.MouseDown, []string{}, resetCounter)
+	// robotgo.EventHook(hook.MouseDown, []string{}, resetCounter) // Seems not working
 	robotgo.EventHook(hook.MouseUp, []string{}, resetCounter)
 	robotgo.EventHook(hook.MouseDrag, []string{}, resetCounter)
 	s := robotgo.EventStart()
@@ -42,7 +42,7 @@ func ListenEvents() {
 }
 
 func Flip(msg1 string, direction, interval, vk int) {
-	cnt = 0
+	cnt := 0
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		panic(err)
@@ -80,12 +80,17 @@ func Flip(msg1 string, direction, interval, vk int) {
 	}
 	mainFunc() // Run once immediately
 	// Run ticker
-	chStop = make(chan bool)
+	chStop = make(chan bool, 1)
+	chReset = make(chan bool, 1)
 	ticker := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			mainFunc()
+		case <-chReset:
+			cnt = 0
+			mainFunc()
+			ticker.Reset(time.Second)
 		case <-chStop:
 			ticker.Stop()
 			break
@@ -94,7 +99,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 }
 
 func Scroll(msg1 string, interval int) {
-	cnt = 0
+	cnt := 0
 	// Main func
 	mainFunc := func() {
 		remaining := interval - cnt
@@ -118,11 +123,16 @@ func Scroll(msg1 string, interval int) {
 	mainFunc() // Run once immediately
 	// Run ticker
 	chStop = make(chan bool)
+	chReset = make(chan bool)
 	ticker := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			mainFunc()
+		case <-chReset:
+			cnt = 0
+			mainFunc()
+			ticker.Reset(time.Second)
 		case <-chStop:
 			ticker.Stop()
 			break

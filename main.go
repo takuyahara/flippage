@@ -116,7 +116,7 @@ func runFlip(direction, interval, vk int) uint {
 	// Flip page automatically
 	utils.ClearLine()
 	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
-	go listener.ListenEvents()
+	listener.ListenEvents()
 	go listener.Flip(message, direction, interval, vk)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
@@ -138,7 +138,7 @@ func runScroll(interval int) uint {
 	// Flip page automatically
 	utils.ClearLine()
 	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
-	go listener.ListenEvents()
+	listener.ListenEvents()
 	go listener.Scroll(message, interval)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground

@@ -14,20 +14,19 @@ import (
 
 var chStop chan bool
 var chReset chan bool
-var skipEvent bool
 
 func Stop() {
 	chStop <- false
+	removeEventHooks()
+}
+
+func removeEventHooks() {
 	robotgo.EventEnd()
 }
 
-func ListenEvents() {
-	skipEvent = false
+func addEventHooks() {
 	resetCounter := func(e hook.Event) {
-		if !skipEvent {
-			chReset <- true
-		}
-		skipEvent = false
+		chReset <- true
 	}
 	robotgo.EventHook(hook.KeyDown, []string{`left`}, resetCounter)
 	robotgo.EventHook(hook.KeyDown, []string{`right`}, resetCounter)
@@ -41,6 +40,10 @@ func ListenEvents() {
 	<-robotgo.EventProcess(s)
 }
 
+func ListenEvents() {
+	go addEventHooks()
+}
+
 func Flip(msg1 string, direction, interval, vk int) {
 	cnt := 0
 	kb, err := keybd_event.NewKeyBonding()
@@ -52,10 +55,11 @@ func Flip(msg1 string, direction, interval, vk int) {
 	mainFunc := func() {
 		remaining := interval - cnt
 		if remaining <= 0 {
-			skipEvent = true
+			removeEventHooks()
 			if err := kb.Launching(); err != nil {
 				panic(err)
 			}
+			go addEventHooks()
 			remaining = interval
 			cnt = 0
 		}
@@ -104,8 +108,9 @@ func Scroll(msg1 string, interval int) {
 	mainFunc := func() {
 		remaining := interval - cnt
 		if remaining <= 0 {
-			skipEvent = true
+			removeEventHooks()
 			robotgo.ScrollMouse(1, `down`)
+			go addEventHooks()
 			remaining = interval
 			cnt = 0
 		}

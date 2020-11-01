@@ -12,6 +12,8 @@ import (
 	"github.com/micmonay/keybd_event"
 )
 
+const TICK_INTERVAL_MSEC = 100
+
 var chStop chan bool
 var chReset chan bool
 
@@ -45,7 +47,9 @@ func ListenEvents() {
 }
 
 func Flip(msg1 string, direction, interval, vk int) {
-	cnt := 0
+	cnt := 0.0
+	incr := float64(TICK_INTERVAL_MSEC) / 1000
+	duration := time.Millisecond * TICK_INTERVAL_MSEC
 	kb, err := keybd_event.NewKeyBonding()
 	if err != nil {
 		panic(err)
@@ -53,7 +57,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 	kb.SetKeys(vk)
 	// Main func
 	mainFunc := func() {
-		remaining := interval - cnt
+		remaining := interval - int(cnt)
 		if remaining <= 0 {
 			removeEventHooks()
 			if err := kb.Launching(); err != nil {
@@ -63,7 +67,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 			remaining = interval
 			cnt = 0
 		}
-		progress := 1.0 - float64(remaining-1)/float64(interval)
+		progress := cnt / float64(interval)
 		var msg2 string
 		if remaining > 1 {
 			msg2 = fmt.Sprintf(`Will flip page in %d seconds...`, remaining)
@@ -80,13 +84,13 @@ func Flip(msg1 string, direction, interval, vk int) {
 				utils.ShowProgressBarRight(progress, message)
 			}
 		}
-		cnt++
+		cnt += incr
 	}
 	mainFunc() // Run once immediately
 	// Run ticker
 	chStop = make(chan bool, 1)
 	chReset = make(chan bool, 1)
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(duration)
 	for {
 		select {
 		case <-ticker.C:
@@ -94,7 +98,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 		case <-chReset:
 			cnt = 0
 			mainFunc()
-			ticker.Reset(time.Second)
+			ticker.Reset(duration)
 		case <-chStop:
 			ticker.Stop()
 			break
@@ -103,10 +107,12 @@ func Flip(msg1 string, direction, interval, vk int) {
 }
 
 func Scroll(msg1 string, interval int) {
-	cnt := 0
+	cnt := 0.0
+	incr := float64(TICK_INTERVAL_MSEC) / 1000
+	duration := time.Millisecond * TICK_INTERVAL_MSEC
 	// Main func
 	mainFunc := func() {
-		remaining := interval - cnt
+		remaining := interval - int(cnt)
 		if remaining <= 0 {
 			removeEventHooks()
 			robotgo.ScrollMouse(1, `down`)
@@ -114,7 +120,7 @@ func Scroll(msg1 string, interval int) {
 			remaining = interval
 			cnt = 0
 		}
-		progress := 1.0 - float64(remaining-1)/float64(interval)
+		progress := cnt / float64(interval)
 		var msg2 string
 		if remaining > 1 {
 			msg2 = fmt.Sprintf(`Will scroll page in %d seconds...`, remaining)
@@ -123,13 +129,13 @@ func Scroll(msg1 string, interval int) {
 		}
 		message := msg1 + msg2
 		utils.ShowProgressBarScroll(progress, message)
-		cnt++
+		cnt += incr
 	}
 	mainFunc() // Run once immediately
 	// Run ticker
 	chStop = make(chan bool)
 	chReset = make(chan bool)
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(duration)
 	for {
 		select {
 		case <-ticker.C:
@@ -137,7 +143,7 @@ func Scroll(msg1 string, interval int) {
 		case <-chReset:
 			cnt = 0
 			mainFunc()
-			ticker.Reset(time.Second)
+			ticker.Reset(duration)
 		case <-chStop:
 			ticker.Stop()
 			break

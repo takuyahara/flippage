@@ -87,8 +87,8 @@ func ShowProgressBarLeft(progress float64, msg ...string) {
 	}
 	Clear()
 	_, width := getSize()
-	repeatSpace := int(math.Round(float64(width) * (1.0 - progress)))
 	repeatBar := int(math.Round(float64(width) * progress))
+	repeatSpace := width - repeatBar
 	if messageExists {
 		GoToNextLine(2)
 		fmt.Print(strings.Repeat(` `, repeatSpace) + "\033[46;1m" + strings.Repeat(` `, repeatBar) + "\033[0m")

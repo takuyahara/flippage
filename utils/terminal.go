@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+var width int
+var height int
+
 func Clear() {
 	fmt.Print("\033[H\033[2J")
 }
@@ -57,7 +60,7 @@ func GoToNextLine(rep ...int) {
 	fmt.Print(strings.Repeat("\033[0B\r", repeat))
 }
 
-func getSize() (int, int) {
+func DefineTerminalSize() {
 	cmd := exec.Command(`stty`, `size`)
 	cmd.Stdin = os.Stdin
 	output, err := cmd.Output()
@@ -65,15 +68,14 @@ func getSize() (int, int) {
 		panic(err)
 	}
 	size := strings.Split(strings.TrimSpace(string(output)), ` `)
-	height, err := strconv.Atoi(size[0])
+	height, err = strconv.Atoi(size[0])
 	if err != nil {
 		panic(err)
 	}
-	width, err := strconv.Atoi(size[1])
+	width, err = strconv.Atoi(size[1])
 	if err != nil {
 		panic(err)
 	}
-	return height, width
 }
 
 func ShowProgressBarLeft(progress float64, msg ...string) {
@@ -86,7 +88,6 @@ func ShowProgressBarLeft(progress float64, msg ...string) {
 		panic(`Cannot passed more than 2 arguments.`)
 	}
 	Clear()
-	_, width := getSize()
 	repeatBar := int(math.Round(float64(width) * progress))
 	repeatSpace := width - repeatBar
 	if messageExists {
@@ -109,7 +110,6 @@ func ShowProgressBarRight(progress float64, msg ...string) {
 		panic(`Cannot passed more than 2 arguments.`)
 	}
 	Clear()
-	_, width := getSize()
 	repeatBar := int(math.Round(float64(width) * progress))
 	if messageExists {
 		GoToNextLine(2)
@@ -130,7 +130,6 @@ func ShowProgressBarDown(progress float64, msg ...string) {
 	}
 	Clear()
 	messages := strings.Split(message, "\n")
-	height, _ := getSize()
 	repeatBar := int(math.Round(float64(height) * progress))
 	for i, line := range messages {
 		firstChar := ``

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/micmonay/keybd_event"
 )
@@ -21,7 +22,7 @@ func getInterval() int {
 	var interval int
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
-		fmt.Print(`Type interval in second which is non-zero uint: `)
+		fmt.Print("\033[1mType interval in second which is non-zero uint: \033[m")
 		scanner.Scan()
 		scanned := scanner.Text()
 		if regexp.MustCompile(`^[1-9][0-9]*$`).MatchString(scanned) {
@@ -44,7 +45,7 @@ func getConfig() (int, int, int) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		utils.ClearPreviousLine()
-		fmt.Print("Specify a direction to flip (\033[4ml\033[24meft/\033[4mr\033[24might/\033[4md\033[24mown/\033[4ms\033[24mcroll): ")
+		fmt.Print("\033[1mSpecify a direction to flip (\033[4ml\033[24meft/\033[4mr\033[24might/\033[4md\033[24mown/\033[4ms\033[24mcroll): \033[m")
 		scanner.Scan()
 		scanned := strings.ToLower(scanner.Text())
 		if regexp.MustCompile(`^(?:left|right|down|scroll|l|r|d|s)$`).MatchString(scanned) {
@@ -78,7 +79,7 @@ func getRetry() uint {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		msgPrompt := []string{
-			"Do you want to retry? (S/d/q)? ",
+			"\033[1mDo you want to retry? (S/d/q)? \033[m",
 			" [S] Retry with \033[4ms\033[24mame config",
 			" [d] Retry with \033[4md\033[24mifferent config",
 			" [q] Don't retry and \033[4mq\033[24muit app",
@@ -107,6 +108,7 @@ func getRetry() uint {
 }
 
 func runFlip(direction, interval, vk int) uint {
+	timeStart := time.Now()
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	// Wait until foreground app changes
 	utils.ClearPreviousLine()
@@ -122,14 +124,17 @@ func runFlip(direction, interval, vk int) uint {
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
+	timeEnd := time.Now()
+	timeSpent := formatElapsedDuration(timeEnd.Sub(timeStart))
 	listener.Stop()
 	utils.Clear()
 	fmt.Print(message)
-	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
+	fmt.Printf("%s has exited after spending %s as foreground app has changed.\n", APP_NAME, timeSpent)
 	return getRetry()
 }
 
 func runScroll(interval int) uint {
+	timeStart := time.Now()
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	// Wait until foreground app changes
 	utils.ClearPreviousLine()
@@ -145,11 +150,31 @@ func runScroll(interval int) uint {
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
+	timeEnd := time.Now()
+	timeSpent := formatElapsedDuration(timeEnd.Sub(timeStart))
 	listener.Stop()
 	utils.Clear()
 	fmt.Print(message)
-	fmt.Printf("%s has exited as foreground app has changed.\n", APP_NAME)
+	fmt.Printf("%s has exited after spending %s as foreground app has changed.\n", APP_NAME, timeSpent)
 	return getRetry()
+}
+
+func formatElapsedDuration(d time.Duration) string {
+	elapsed := d.Truncate(time.Second)
+	h := elapsed / time.Hour
+	elapsed -= h * time.Hour
+	m := elapsed / time.Minute
+	elapsed -= m * time.Minute
+	s := elapsed / time.Second
+	dFormatted := fmt.Sprintf(`%dh%dm%ds`, h, m, s)
+	if h == 0 {
+		if m > 0 {
+			dFormatted = fmt.Sprintf(`%dm%ds`, m, s)
+		} else {
+			dFormatted = fmt.Sprintf(`%ds`, s)
+		}
+	}
+	return dFormatted
 }
 
 func main() {

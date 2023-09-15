@@ -1,0 +1,26 @@
+name: build-macos
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+      - name: Build and zip
+        run: |
+          make build-macos
+          cd deploy
+          zip -r macos.zip macos
+      - name: Add to releases
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: deploy/macos.zip

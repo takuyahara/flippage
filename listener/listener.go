@@ -1,10 +1,11 @@
 package listener
 
 import (
-	"flippage/config"
-	"flippage/utils"
 	"fmt"
 	"time"
+
+	"github.com/takuyahara/flippage/config"
+	"github.com/takuyahara/flippage/utils"
 
 	"github.com/go-vgo/robotgo"
 	hook "github.com/robotn/gohook"

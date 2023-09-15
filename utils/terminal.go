@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"flippage/config"
 	"fmt"
 	"math"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/takuyahara/flippage/config"
 )
 
 var width int

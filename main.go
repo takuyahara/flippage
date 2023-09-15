@@ -2,16 +2,17 @@ package main
 
 import (
 	"bufio"
-	"flippage/appinfo"
-	"flippage/config"
-	"flippage/listener"
-	"flippage/utils"
 	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/takuyahara/flippage/appinfo"
+	"github.com/takuyahara/flippage/config"
+	"github.com/takuyahara/flippage/listener"
+	"github.com/takuyahara/flippage/utils"
 
 	"github.com/micmonay/keybd_event"
 )

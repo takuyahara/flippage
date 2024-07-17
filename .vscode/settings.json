@@ -1,13 +1,1 @@
-{
-  "editor.autoIndent": "advanced",
-  "editor.formatOnSave": true,
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[go]": {
-    "editor.defaultFormatter": "golang.go"
-  }
-}
+

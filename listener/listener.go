@@ -9,8 +9,6 @@ import (
 
 	"github.com/go-vgo/robotgo"
 	hook "github.com/robotn/gohook"
-
-	"github.com/micmonay/keybd_event"
 )
 
 const TICK_INTERVAL_MSEC = 100
@@ -24,46 +22,39 @@ func Stop() {
 }
 
 func removeEventHooks() {
-	robotgo.EventEnd()
+	hook.End()
 }
 
 func addEventHooks() {
 	resetCounter := func(e hook.Event) {
 		chReset <- true
 	}
-	robotgo.EventHook(hook.KeyDown, []string{`left`}, resetCounter)
-	robotgo.EventHook(hook.KeyDown, []string{`right`}, resetCounter)
-	robotgo.EventHook(hook.KeyDown, []string{`up`}, resetCounter)
-	robotgo.EventHook(hook.KeyHold, []string{`down`}, resetCounter) // Workaround: Oddly, key down event for `down` will never be invoked
-	robotgo.EventHook(hook.MouseWheel, []string{}, resetCounter)
-	// robotgo.EventHook(hook.MouseDown, []string{}, resetCounter) // Seems not working
-	robotgo.EventHook(hook.MouseUp, []string{}, resetCounter)
-	robotgo.EventHook(hook.MouseDrag, []string{}, resetCounter)
-	s := robotgo.EventStart()
-	<-robotgo.EventProcess(s)
+	hook.Register(hook.KeyDown, []string{`left`}, resetCounter)
+	hook.Register(hook.KeyDown, []string{`right`}, resetCounter)
+	hook.Register(hook.KeyDown, []string{`up`}, resetCounter)
+	hook.Register(hook.KeyHold, []string{`down`}, resetCounter) // Workaround: Oddly, key down event for `down` will never be invoked
+	hook.Register(hook.MouseWheel, []string{}, resetCounter)
+	// hook.Register(hook.MouseDown, []string{}, resetCounter) // Seems not working
+	hook.Register(hook.MouseUp, []string{}, resetCounter)
+	hook.Register(hook.MouseDrag, []string{}, resetCounter)
+	s := hook.Start()
+	<-hook.Process(s)
 }
 
 func ListenEvents() {
 	go addEventHooks()
 }
 
-func Flip(msg1 string, direction, interval, vk int) {
+func Flip(msg1 string, direction, interval int, key string) {
 	cnt := 0.0
 	incr := float64(TICK_INTERVAL_MSEC) / 1000
 	duration := time.Millisecond * TICK_INTERVAL_MSEC
-	kb, err := keybd_event.NewKeyBonding()
-	if err != nil {
-		panic(err)
-	}
-	kb.SetKeys(vk)
 	// Main func
 	mainFunc := func() {
 		remaining := interval - int(cnt)
 		if remaining <= 0 {
 			removeEventHooks()
-			if err := kb.Launching(); err != nil {
-				panic(err)
-			}
+			robotgo.KeyTap(key)
 			go addEventHooks()
 			remaining = interval
 			cnt = 0
@@ -92,6 +83,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 	chStop = make(chan bool, 1)
 	chReset = make(chan bool, 1)
 	ticker := time.NewTicker(duration)
+tick:
 	for {
 		select {
 		case <-ticker.C:
@@ -102,7 +94,7 @@ func Flip(msg1 string, direction, interval, vk int) {
 			ticker.Reset(duration)
 		case <-chStop:
 			ticker.Stop()
-			break
+			break tick
 		}
 	}
 }
@@ -116,7 +108,7 @@ func Scroll(msg1 string, interval int) {
 		remaining := interval - int(cnt)
 		if remaining <= 0 {
 			removeEventHooks()
-			robotgo.ScrollMouse(1, `down`)
+			robotgo.ScrollDir(1, `down`)
 			go addEventHooks()
 			remaining = interval
 			cnt = 0
@@ -137,6 +129,7 @@ func Scroll(msg1 string, interval int) {
 	chStop = make(chan bool)
 	chReset = make(chan bool)
 	ticker := time.NewTicker(duration)
+tick:
 	for {
 		select {
 		case <-ticker.C:
@@ -147,7 +140,7 @@ func Scroll(msg1 string, interval int) {
 			ticker.Reset(duration)
 		case <-chStop:
 			ticker.Stop()
-			break
+			break tick
 		}
 	}
 }

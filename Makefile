@@ -3,7 +3,7 @@
 ## Build app for macOS
 build-macos:
 	rm -rf deploy && mkdir deploy
-	GOOS=darwin GOARCH=amd64 go build -v -o deploy/flippage
+	GOOS=darwin GOARCH=arm64 go build -v -o deploy/flippage
 
 .DEFAULT_GOAL := help
 .SILENT:

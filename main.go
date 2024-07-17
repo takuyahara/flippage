@@ -13,8 +13,6 @@ import (
 	"github.com/takuyahara/flippage/config"
 	"github.com/takuyahara/flippage/listener"
 	"github.com/takuyahara/flippage/utils"
-
-	"github.com/micmonay/keybd_event"
 )
 
 const APP_NAME = `Flippage`
@@ -39,10 +37,10 @@ func getInterval() int {
 	return interval
 }
 
-func getConfig() (int, int, int) {
+func getConfig() (int, int, string) {
 	var direction int
 	var mode int
-	var vk int
+	var key string
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		utils.ClearPreviousLine()
@@ -54,25 +52,25 @@ func getConfig() (int, int, int) {
 			case `l`, `left`:
 				direction = config.DIRECTION_LEFT
 				mode = config.MODE_FLIP
-				vk = keybd_event.VK_LEFT
+				key = "left"
 			case `r`, `right`:
 				direction = config.DIRECTION_RIGHT
 				mode = config.MODE_FLIP
-				vk = keybd_event.VK_RIGHT
+				key = "right"
 			case `d`, `down`:
 				direction = config.DIRECTION_DOWN
 				mode = config.MODE_FLIP
-				vk = keybd_event.VK_DOWN
+				key = "down"
 			case `s`, `scroll`:
 				direction = config.DIRECTION_DOWN
 				mode = config.MODE_SCROLL
-				vk = keybd_event.VK_UP
+				key = "up"
 			}
 			break
 		}
 		utils.ClearLine()
 	}
-	return direction, mode, vk
+	return direction, mode, key
 }
 
 func getRetry() uint {
@@ -108,7 +106,7 @@ func getRetry() uint {
 	return retry
 }
 
-func runFlip(direction, interval, vk int) uint {
+func runFlip(direction, interval int, key string) uint {
 	timeStart := time.Now()
 	chAppInfoForeground := make(chan appinfo.AppInfo, 2)
 	// Wait until foreground app changes
@@ -121,7 +119,7 @@ func runFlip(direction, interval, vk int) uint {
 	utils.DefineTerminalSize()
 	message := fmt.Sprintf("%s has activated for %s.\n", APP_NAME, appInfoTarget.Name)
 	listener.ListenEvents()
-	go listener.Flip(message, direction, interval, vk)
+	go listener.Flip(message, direction, interval, key)
 	appinfo.GetChangedForegroundInfo(chAppInfoForeground)
 	<-chAppInfoForeground
 	// Close app
@@ -181,10 +179,10 @@ func formatElapsedDuration(d time.Duration) string {
 func main() {
 	utils.Clear()
 	interval := getInterval()
-	direction, mode, vk := getConfig()
+	direction, mode, key := getConfig()
 	var retry uint
 	if mode == config.MODE_FLIP {
-		retry = runFlip(direction, interval, vk)
+		retry = runFlip(direction, interval, key)
 	} else {
 		retry = runScroll(interval)
 	}
@@ -192,10 +190,10 @@ func main() {
 		utils.Clear()
 		if retry == config.RETRY_WITH_DIFFERENT_CONFIG {
 			interval = getInterval()
-			direction, mode, vk = getConfig()
+			direction, mode, key = getConfig()
 		}
 		if mode == config.MODE_FLIP {
-			retry = runFlip(direction, interval, vk)
+			retry = runFlip(direction, interval, key)
 		} else {
 			retry = runScroll(interval)
 		}

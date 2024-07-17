@@ -3,7 +3,32 @@
 ## Build app for macOS
 build-macos:
 	rm -rf deploy && mkdir deploy
-	GOOS=darwin GOARCH=amd64 go build -v -o deploy/flippage
+	GOOS=darwin GOARCH=arm64 go build -v -o deploy/flippage
+
+BRANCH := $(shell git symbolic-ref --short HEAD)
+VERSION := $(shell echo $(BRANCH) | sed 's/release\///g')
+.SILENT:
+.PHONY: _is-release-branch
+# Verify current branch name
+_is-release-branch:
+	if [ "$(shell echo $(BRANCH) | grep -E "^release/[0-9]+\.[0-9]+\.[0-9]+$$")" ]; then \
+		exit 0; \
+	fi; \
+	echo "Invalid branch name. Aborted."; \
+	exit 1
+
+.SILENT:
+.PHONY: _version-readme
+# Update version in README.md
+_version-readme: _is-release-branch
+	sed -i -E 's/(https\:\/\/img\.shields\.io\/badge\/version\-)([0-9]+\.[0-9]+\.[0-9]+)(.*)/\1$(VERSION)\3/g' ./README.md
+	printf "Updated version to \033[36m$(VERSION)\033[0m in README.md.\n"
+
+
+.SILENT:
+.PHONY: version
+## Update version in files based on branch name
+version: _version-readme
 
 .DEFAULT_GOAL := help
 .SILENT:

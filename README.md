@@ -2,7 +2,7 @@
     Flippage
 </h1>
 
-![version](https://img.shields.io/badge/version-1.3.9-brightgreen)
+![version](https://img.shields.io/badge/version-1.4.0-brightgreen)
 ![README](https://img.shields.io/badge/README-available-brightgreen)
 ![platform](https://img.shields.io/badge/platform-mac-blue)
 ![maintainer](https://img.shields.io/badge/maintainer-Takuya%20HARA-brightgreen)

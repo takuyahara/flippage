@@ -10,15 +10,15 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
         with:
-          go-version: "stable"
+          nix_path: nixpkgs=channel:nixos-unstable
       - name: Build and zip
         run: |
-          make build-macos
+          nix-shell --run "make build-macos"
           cd deploy
-          zip -r macos.zip macos
+          zip -r macos.zip flippage
       - name: Add to releases
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

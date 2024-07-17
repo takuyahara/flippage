@@ -6,12 +6,12 @@ import (
 )
 
 type AppInfo struct {
-	Pid  int32
+	Pid  int
 	Name string
 }
 
 func getForeground() (AppInfo, bool) {
-	pid := robotgo.GetPID()
+	pid := robotgo.GetPid()
 	process, err := ps.FindProcess(int(pid))
 	if err != nil {
 		panic(err)

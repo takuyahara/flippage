@@ -1,1 +1,13 @@
-
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "go.goroot": "/nix/store/52f5kjcmgmvgrz3rij676b3rjmgg5l5g-go-1.25.4/share/go",
+  "go.alternateTools": {
+    "gopls": "/nix/store/4s7fb36fqfgdhmkjn3p1d4wglcs0avm0-gopls-0.21.0/bin/gopls",
+    "dlv": "/nix/store/wa5wpzp4h2krzs9q2cdlk7g4c0a8mhpc-delve-1.26.0/bin/dlv",
+    "staticcheck": "/nix/store/i83wpnfb1nagasr2v43p3lc8ym85812a-go-tools-2025.1.1/bin/staticcheck"
+  }
+}

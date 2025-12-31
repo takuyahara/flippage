@@ -14,35 +14,28 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        sharedPackages = with pkgs; [
-          gitflow
-          bash-completion
-          go
-          gotools
-          go-tools
-          gopls
-          go-outline
-          gopkgs
-          gocode-gomod
-          godef
-          apple-sdk_26
-        ];
       in
       {
         formatter = pkgs.nixfmt-tree;
         devShells = {
           default = pkgs.mkShell {
             name = "flippage";
-            packages =
-              with pkgs;
-              sharedPackages
-              ++ [
-                jq
-                gitflow
-                bash-completion
-                pinact
-                zizmor
-              ];
+            packages = with pkgs; [
+              jq
+              gitflow
+              bash-completion
+              pinact
+              zizmor
+              # Go tools
+              go
+              gotools
+              go-tools
+              gopls
+              go-outline
+              gopkgs
+              gocode-gomod
+              godef
+            ];
             shellHook = ''
               if [[ -e ./.vscode/settings.json ]]; then
                 goroot="${pkgs.go}/share/go"
@@ -59,10 +52,6 @@
               . "${pkgs.bash-completion}/etc/profile.d/bash_completion.sh"
               PATH=$PATH:~/go/bin
             '';
-          };
-          ci = pkgs.mkShell {
-            name = "ci";
-            packages = sharedPackages;
           };
         };
       }
